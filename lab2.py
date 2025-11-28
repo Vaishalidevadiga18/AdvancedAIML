@@ -1,99 +1,86 @@
 import math
 
-# Initialize board
-board = [' ' for _ in range(9)]
+# Initialize the board and winning combinations
+b = [" "] * 9
+w = [
+    [0, 1, 2],[3, 4, 5],[6, 7, 8],
+    [0, 3, 6],[1, 4, 7],[2, 5, 8],
+    [0, 4, 8],[2, 4, 6]
+]
 
-# Print board
-def print_board():
-    for row in [board[i*3:(i+1)*3] for i in range(3)]:
-        print('| ' + ' | '.join(row) + ' |')
+# Display the board
+def show():
+    print("\n".join(["|".join(b[i:i+3]) for i in range(0, 9, 3)]))
 
-# Check for winner
-def winner(b, player):
-    win_states = [
-        [0,1,2],[3,4,5],[6,7,8], # rows
-        [0,3,6],[1,4,7],[2,5,8], # cols
-        [0,4,8],[2,4,6]           # diagonals
-    ]
-    return any(all(b[i] == player for i in combo) for combo in win_states)
+# Check if a player has won
+def win(p):
+    return any(all(b[i] == p for i in c) for c in w)
 
-# Check if board full
-def full_board(b):
-    return ' ' not in b
+# Check if the board is full (draw)
+def full():
+    return " " not in b
 
-# Minimax Algorithm
-def minimax(b, depth, is_maximizing):
-    if winner(b, 'O'):  # AI win
+# Minimax algorithm for AI decision making
+def minimax(p):
+    if win("O"): 
         return 1
-    elif winner(b, 'X'):  # Human win
+    if win("X"): 
         return -1
-    elif full_board(b):  # Draw
+    if full(): 
         return 0
 
-    if is_maximizing:
-        best_score = -math.inf
-        for i in range(9):
-            if b[i] == ' ':
-                b[i] = 'O'
-                score = minimax(b, depth+1, False)
-                b[i] = ' '
-                best_score = max(score, best_score)
-        return best_score
-    else:
-        best_score = math.inf
-        for i in range(9):
-            if b[i] == ' ':
-                b[i] = 'X'
-                score = minimax(b, depth+1, True)
-                b[i] = ' '
-                best_score = min(score, best_score)
-        return best_score
-
-# AI Move
-def best_move():
-    best_score = -math.inf
-    move = None
+    scores = []
     for i in range(9):
-        if board[i] == ' ':
-            board[i] = 'O'
-            score = minimax(board, 0, False)
-            board[i] = ' '
-            if score > best_score:
-                best_score = score
-                move = i
-    board[move] = 'O'
+        if b[i] == " ":
+            b[i] = p
+            scores.append(minimax("X" if p == "O" else "O"))
+            b[i] = " "
+    return max(scores) if p == "O" else min(scores)
 
-# Main Game Loop
+# Find the best move for the computer (O)
+def best():
+    m, s = -1, -math.inf
+    for i in range(9):
+        if b[i] == " ":
+            b[i] = "O"
+            sc = minimax("X")
+            b[i] = " "
+            if sc > s:
+                s, m = sc, i
+    return m
+
+# Main game loop
 def play():
-    print("Tic Tac Toe! You are X, AI is O.")
-    print_board()
-
+    print("You: X, Computer: O")
+    show()
     while True:
-        # Human turn
-        move = int(input("Enter your move (0-8): "))
-        if board[move] == ' ':
-            board[move] = 'X'
-        else:
-            print("Invalid move. Try again.")
+        h = int(input("Move (1-9): ")) - 1
+        if b[h] != " ":
+            print("Invalid move! Try again.")
             continue
 
-        print_board()
-        if winner(board, 'X'):
-            print("You win!")
+        b[h] = "X"
+        if win("X"):
+            show()
+            print("🎉 You win!")
             break
-        if full_board(board):
-            print("It's a draw!")
-            break
-
-        # AI turn
-        best_move()
-        print("AI Move:")
-        print_board()
-        if winner(board, 'O'):
-            print("AI wins!")
-            break
-        if full_board(board):
-            print("It's a draw!")
+        if full():
+            show()
+            print("🤝 It's a draw!")
             break
 
-play()
+        c = best()
+        b[c] = "O"
+        print(f"\nComputer moves at position {c + 1}")
+        show()
+
+        if win("O"):
+            print("💻 Computer wins!")
+            break
+        if full():
+            print("🤝 It's a draw!")
+            break
+
+
+# Start the game
+play()      
